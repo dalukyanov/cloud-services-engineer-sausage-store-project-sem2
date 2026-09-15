@@ -1,13 +1,14 @@
+{{- if .Values.vpa.enabled }}
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
-  name: {{ .Release.Name }}-{{ .Chart.Name }}-vpa
+  name: sausage-backend-vpa
+  namespace: {{ .Release.Namespace }}
 spec:
   targetRef:
-    apiVersion: "apps/v1"
+    apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Release.Name }}-{{ .Chart.Name }}
+    name: sausage-backend
   updatePolicy:
-{{ toYaml .Values.vpa.updatePolicy | indent 4 }}
-  resourcePolicy:
-{{ toYaml .Values.vpa.resourcePolicy | indent 4 }}
+    updateMode: "{{ .Values.vpa.updateMode }}"
+{{- end }}

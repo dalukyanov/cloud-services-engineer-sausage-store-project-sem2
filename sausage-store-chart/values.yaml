@@ -1,59 +1,22 @@
 global:
   environment: production
 
-frontend:
-  replicas: 1
-  revisionHistoryLimit: 15
-  strategy:
-    type: Recreate
-  image:
-    repository: indeicheg/sausage-frontend
-    tag: latest
-    pullPolicy: Always
-  service:
-    port: 80
-  containerPort: 80
-  nginxConf: nginx.conf
-  ingress:
-    enabled: true
-    className: nginx
-    host: front-dalukyanov.2sem.students-projects.ru
-    path: /
-    pathType: Prefix
-    tlsSecret: 2sem-students-projects-wildcard-secret
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
 backend:
   replicas: 1
-  revisionHistoryLimit: 15
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
   image:
     repository: indeicheg/sausage-backend
     tag: latest
     pullPolicy: Always
   service:
     port: 8080
-  containerPort: 8080
-  annotations:
-    path: /actuator/prometheus
-    port: "8080"
-    scrape: "true"
-  env:
-    postgresUri: jdbc:postgresql://postgresql:5432/sausage-store
-    postgresUser: store
-    postgresPassword: storepassword
-    reportPath: /logs/reports
-    logPath: /logs
+  database:
+    url: jdbc:postgresql://postgresql:5432/sausage-store
+    username: store
+    password: storepassword
+  mongodb:
+    uri: mongodb://root:rootpassword@mongodb:27017/sausage-store?authSource=admin
+  vault:
+    enabled: "false"
   resources:
     requests:
       cpu: 250m
@@ -62,36 +25,24 @@ backend:
       cpu: 700m
       memory: 600Mi
   livenessProbe:
-    httpGet:
-      path: /actuator/health
-      port: 8080
+    path: /actuator/health
     initialDelaySeconds: 60
     periodSeconds: 15
-    timeoutSeconds: 5
-    failureThreshold: 3
   vpa:
-    updatePolicy:
-      updateMode: "Off"
-    resourcePolicy:
-      containerPolicies:
-        - containerName: "*"
-          controlledResources: ["cpu", "memory"]
+    enabled: true
+    updateMode: "Off"
 
 backend-report:
   replicas: 1
-  revisionHistoryLimit: 15
-  strategy:
-    type: Recreate
   image:
-    repository: indeicheg/sausage-store/sausage-backend-report
+    repository: indeicheg/sausage-backend-report
     tag: latest
     pullPolicy: Always
   service:
     port: 8080
-  containerPort: 8080
   env:
     port: "8080"
-    db: mongodb://reports:reportspassword@mongodb:27017/sausage-store
+    db: mongodb://root:rootpassword@mongodb:27017/sausage-store?authSource=admin
   resources:
     requests:
       cpu: 100m
@@ -102,15 +53,33 @@ backend-report:
   hpa:
     enabled: true
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 2
     targetCPUUtilizationPercentage: 75
+
+frontend:
+  replicas: 1
+  image:
+    repository: indeicheg/sausage-frontend
+    tag: latest
+    pullPolicy: Always
+  service:
+    port: 80
+  ingress:
+    enabled: true
+    className: nginx
+    host: front-dalukyanov.2sem.students-projects.ru
+    tlsSecret: 2sem-students-projects-wildcard-secret
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
 infra:
   postgresql:
     image: postgres:16-alpine
-    containerPort: 5432
-    service:
-      port: 5432
     database: sausage-store
     username: store
     password: storepassword
@@ -125,11 +94,10 @@ infra:
 
   mongodb:
     image: mongo:7
-    containerPort: 27017
-    storage: 1Gi
     rootUsername: root
     rootPassword: rootpassword
     database: sausage-store
+    storage: 1Gi
     resources:
       requests:
         cpu: 150m

@@ -1,50 +1,66 @@
----
 apiVersion: v1
 kind: Secret
 metadata:
   name: mongodb-secret
+  namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
-  MONGO_INITDB_ROOT_USERNAME: {{ .Values.mongodb.rootUsername | quote }}
-  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.rootPassword | quote }}
-  MONGO_INITDB_DATABASE: {{ .Values.mongodb.database | quote }}
+  MONGO_INITDB_ROOT_USERNAME: "{{ .Values.mongodb.rootUsername }}"
+  MONGO_INITDB_ROOT_PASSWORD: "{{ .Values.mongodb.rootPassword }}"
+  MONGO_INITDB_DATABASE: "{{ .Values.mongodb.database }}"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: mongodb
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: mongodb
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
 spec:
   type: ClusterIP
-  ports:
-    - port: {{ .Values.mongodb.containerPort }}
-      targetPort: {{ .Values.mongodb.containerPort }}
-      protocol: TCP
   selector:
-    app: mongodb
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: mongodb
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mongodb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sausage-store
 spec:
   serviceName: mongodb
   replicas: 1
   selector:
     matchLabels:
-      app: mongodb
+      app.kubernetes.io/name: mongodb
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
   template:
     metadata:
       labels:
-        app: mongodb
+        app.kubernetes.io/name: mongodb
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: sausage-store
     spec:
       containers:
         - name: mongodb
-          image: {{ .Values.mongodb.image }}
+          image: "{{ .Values.mongodb.image }}"
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: {{ .Values.mongodb.containerPort }}
+            - name: mongodb
+              containerPort: 27017
           envFrom:
             - secretRef:
                 name: mongodb-secret
@@ -57,7 +73,8 @@ spec:
     - metadata:
         name: mongodb-data
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: {{ .Values.mongodb.storage }}
