@@ -113,6 +113,8 @@ Workflow `.github/workflows/deploy.yaml` запускается по push в `ma
 |---|---|
 | `DOCKER_USER` | Логин Docker Hub |
 | `DOCKER_PASSWORD` | Docker Hub PAT (Read & Write) |
+| `POSTGRES_PASSWORD` | Пароль Postgres БД store |
+| `MONGO_ROOT_PASSWORD` | Пароль root MongoDB |
 | `NEXUS_HELM_REPO` | URL Helm-репозитория Nexus |
 | `NEXUS_HELM_REPO_USER` | Логин Nexus |
 | `NEXUS_HELM_REPO_PASSWORD` | Пароль Nexus |
