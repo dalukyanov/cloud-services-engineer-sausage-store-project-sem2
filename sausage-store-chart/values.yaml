@@ -12,9 +12,9 @@ backend:
   database:
     url: jdbc:postgresql://postgresql:5432/sausage-store
     username: store
-    password: storepassword
+    password: ""          # --set-string backend.database.password (POSTGRES_PASSWORD)
   mongodb:
-    uri: mongodb://root:rootpassword@mongodb:27017/sausage-store?authSource=admin
+    uri: ""               # --set-string backend.mongodb.uri (собирается из MONGO_ROOT_PASSWORD)
   vault:
     enabled: "false"
   resources:
@@ -29,8 +29,19 @@ backend:
     initialDelaySeconds: 60
     periodSeconds: 15
   vpa:
-    enabled: true
-    updateMode: "Off"
+    updatePolicy:
+      updateMode: "Off"
+    resourcePolicy:
+      containerPolicies:
+        - containerName: "*"
+          mode: "Auto"
+          controlledResources: ["cpu", "memory"]
+          minAllowed:
+            cpu: 0m
+            memory: 0Mi
+          maxAllowed:
+            cpu: 200m
+            memory: 256Mi
 
 backend-report:
   replicas: 1
@@ -42,7 +53,7 @@ backend-report:
     port: 8080
   env:
     port: "8080"
-    db: mongodb://root:rootpassword@mongodb:27017/sausage-store?authSource=admin
+    db: ""                # --set-string backend-report.env.db (собирается из MONGO_ROOT_PASSWORD)
   resources:
     requests:
       cpu: 100m
@@ -82,7 +93,7 @@ infra:
     image: postgres:16-alpine
     database: sausage-store
     username: store
-    password: storepassword
+    password: ""          # --set-string infra.postgresql.password (POSTGRES_PASSWORD)
     storage: 1Gi
     resources:
       requests:
@@ -95,7 +106,7 @@ infra:
   mongodb:
     image: mongo:7
     rootUsername: root
-    rootPassword: rootpassword
+    rootPassword: ""      # --set-string infra.mongodb.rootPassword (MONGO_ROOT_PASSWORD)
     database: sausage-store
     storage: 1Gi
     resources:

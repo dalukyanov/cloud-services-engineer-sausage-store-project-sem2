@@ -124,9 +124,18 @@ jobs:
         run: helm search repo nexus/sausage-store --versions
 
       - name: Deploy chart from Nexus
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          MONGO_ROOT_PASSWORD: ${{ secrets.MONGO_ROOT_PASSWORD }}
         run: |
           helm upgrade --install $HELM_CHART_NAME nexus/sausage-store \
             --namespace $SAUSAGE_STORE_NAMESPACE \
+            --history-max 3 \
+            --set-string backend.database.password="$POSTGRES_PASSWORD" \
+            --set-string infra.postgresql.password="$POSTGRES_PASSWORD" \
+            --set-string infra.mongodb.rootPassword="$MONGO_ROOT_PASSWORD" \
+            --set-string backend.mongodb.uri="mongodb://root:$MONGO_ROOT_PASSWORD@mongodb:27017/sausage-store?authSource=admin" \
+            --set-string backend-report.env.db="mongodb://root:$MONGO_ROOT_PASSWORD@mongodb:27017/sausage-store?authSource=admin" \
             --wait \
             --timeout 10m
 
