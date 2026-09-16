@@ -92,7 +92,7 @@
 
 Frontend доступен по адресу из Ingress:
 
-    https://front-<yourname>.2sem.students-projects.ru
+    https://front-dalukyanov.2sem.students-projects.ru
 
 TLS-секрет: `2sem-students-projects-wildcard-secret` (wildcard от Практикума).
 
@@ -135,6 +135,6 @@ Flyway применяет миграции из `backend/src/main/resources/db/m
 
     kubectl get pods,svc,ingress,pvc,hpa,vpa -n <namespace>
     kubectl logs deployment/sausage-backend -n <namespace> | grep -i flyway
-    curl -I https://front-<yourname>.2sem.students-projects.ru
-    curl -s https://front-<yourname>.2sem.students-projects.ru/api/products
+    curl -I https://front-dalukyanov.2sem.students-projects.ru
+    curl -s https://front-dalukyanov.2sem.students-projects.ru/api/products
 
